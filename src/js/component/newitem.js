@@ -2,32 +2,47 @@ import React, { useState, useEffect } from "react";
 
 const NewItem = () => {
     const [newToDo, setNewToDo] = useState("")
-    const [toDos, setToDos] = useState([])
+    const [toDosObjets, setToDosObjets] = useState([])
+    const [toDos, setToDos] = useState([{
+        "label": "",
+        "is_done": false,
+        "id": ""
+    }])
+    const todoLabel = []
 
-    useEffect(() => {
-
+    function getContacts() {
         fetch("https://playground.4geeks.com/todo/users/margarita1973")
-            .then((resp) => {
-                if (resp.ok) {
-                    return resp.json();
-                } else if (resp.status === 404) {
-                    return fetch("https://playground.4geeks.com/todo/users/margarita1973", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                    })
-                        .then(response => {
-                            return response.json();
-                        })
-                }
-            })
-
+            .then((resp) => { return resp.json() })
             .then((data) => {
                 console.dir(data);
                 setToDos(data.todos);
             })
-            .catch((error) => { return error })
-    }, [newToDo]);
+            .catch((error) => { console.log("error al cargar contactos", error) })
+        console.log(toDos)
+    }
 
+
+    useEffect(() => {
+
+        fetch("https://playground.4geeks.com/todo/users/margarita1973", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: "margarita1973" })
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    getContacts();
+                }
+                return response.json()
+            })
+            .then((data) => {
+                console.log(data)
+            })
+            .catch((error) => {
+                console.error("Error al cargar la lista:", error);
+            })
+        getContacts()
+    }, []);
 
 
     function postToDo() {
@@ -42,8 +57,14 @@ const NewItem = () => {
                 "Content-Type": "application/json"
             }
         })
-            .then((resp) => { console.log(resp.status); return resp.json })
-            .then((data) => { console.dir(data) })
+            .then((resp) => { 
+                if (resp.ok) {
+                    getContacts();
+                }
+                return resp.json()
+                
+            })
+            .then((data) => { console.log(data) })
             .catch((error) => { return error })
     }
 
@@ -84,12 +105,12 @@ const NewItem = () => {
             <div id="todolist" className="todolist-body m-auto z-3 container border border-secondary-subtle p-0  ">
                 <input id="input" className="form-control  px-5 py-3" placeholder="what's need to be done?" onChange={
                     (e) => { setNewToDo(e.target.value) }}
-                    onKeyDown={(e) => { if (e.key == "Enter" && newToDo !== "") { postToDo(newToDo); e.target.value = ""; setNewToDo("") } }}
+                    onKeyDown={(e) => { if (e.key == "Enter" && newToDo !== "") { postToDo(newToDo);  e.target.value = ""; setNewToDo("") } }}
                 />
                 <ul className="list-group">
-                    {toDos.map((todo, i,) => {
+                    {toDos.map((todo, i) => {
                         return (
-                            <li key={i} className="list-group-item text-start px-5 py-3"> {todo.label}
+                            <li className="list-group-item text-start px-5 py-3"> {todo.label}
                                 <button type="button" className="btn-close position-absolute end-0 me-2"
                                     onClick={() => deleteToDo(todo.id)}></button>
                             </li>)
